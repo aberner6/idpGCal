@@ -71,7 +71,7 @@ console.log("nothing");
        */
       function listUpcomingEvents() {
         var request = gapi.client.calendar.events.list({
-          'calendarId': 'primary',
+          'calendarId': 'ciid.dk_i93ju4obca5f1sc1jfro41m03c@group.calendar.google.com', //'primary'
           'timeMin': (new Date()).toISOString(),
           'showDeleted': false,
           'singleEvents': true,
@@ -86,6 +86,11 @@ console.log("nothing");
           if (events.length > 0) {
             for (i = 0; i < events.length; i++) {
               var event = events[i];
+	              if(event.attendees!=undefined){
+		              for(j=0; j<event.attendees.length; j++){
+		              	console.log(i+event.attendees[j].displayName);
+		              }
+	              }
               var when = event.start.dateTime;
               if (!when) {
                 when = event.start.date;
