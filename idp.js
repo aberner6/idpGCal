@@ -70,12 +70,13 @@ console.log("nothing");
        * appropriate message is printed.
        */
       function listUpcomingEvents() {
+var firstdate = "Jan 1 2016 12:00:00 GMT+0200 (CEST)";
         var request = gapi.client.calendar.events.list({
           'calendarId': 'ciid.dk_i93ju4obca5f1sc1jfro41m03c@group.calendar.google.com', //'primary'
-          'timeMin': (new Date()).toISOString(),
+          'timeMin': (new Date(firstdate)).toISOString(),
           'showDeleted': false,
           'singleEvents': true,
-          'maxResults': 10,
+          // 'maxResults': 10,
           'orderBy': 'startTime'
         });
 
@@ -91,6 +92,7 @@ console.log("nothing");
 		              	console.log(i+event.attendees[j].displayName);
 		              }
 	              }
+	              console.log(events[i])
               var when = event.start.dateTime;
               if (!when) {
                 when = event.start.date;
