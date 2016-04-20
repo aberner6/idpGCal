@@ -6,6 +6,8 @@ var format = d3.time.format("%x");
 var width = 1200;
 var height = 600;
 var segHeight = 20;
+var theseDiffs = [];
+var maxDiff;
 
 var firstDate = new Date("Jan 1 2016 12:00:00 GMT+0200 (CEST)");
 var lastDate = new Date("Dec 31 2016 12:00:00 GMT+0200 (CEST)");
@@ -112,28 +114,29 @@ var lastDate = new Date("Dec 31 2016 12:00:00 GMT+0200 (CEST)");
 							"how": event.description,
 							"start": format(when),//new Date(event.start.dateTime),
 							"end": format(whenEnd),//new Date(event.end.dateTime),
-							"colorId": event.colorId
+							"colorId": event.colorId,
+							"diff": new Date(format(whenEnd)) - new Date(format(when))							
 						})
 				}
 	            if (!when) {
 					var when = new Date(event.start.date);
-					var sumn = when.getMonth()+when.getDate()+when.getYear();
-
 					var whenEnd = new Date(event.end.date);
-					var sumEnd = whenEnd.getMonth()+whenEnd.getDate()+whenEnd.getYear();
-
 					pushHere[i]=({
 							"who": event.attendees,
 							"what": event.summary,
 							"how": event.description,
 							"start": format(when),//new Date(event.start.date),
 							"end": format(whenEnd),//new Date(event.end.date),
-							"colorId": event.colorId
+							"colorId": event.colorId,
+							"diff": new Date(format(whenEnd)) - new Date(format(when))							
 						})
 	            }
+
 	            nestThis = d3.nest()
 					.key(function(d) { return d.start; })
 					.entries(pushHere);
+
+
 				// if(nestThis.length>0){
 				// 	for(i=0; i<nestThis.length; i++){
 				// 		drawData(nestThis[i].values)
@@ -158,18 +161,33 @@ var lastDate = new Date("Dec 31 2016 12:00:00 GMT+0200 (CEST)");
 
 var that;
 var levels = 0;
+var maxColors;
+var theseColors = [];
 function drawData(){
+    for(i=0; i<pushHere.length; i++){
+    	theseDiffs.push(pushHere[i].diff);
+    	theseColors.push(pushHere[i].colorId);
+    }
+    maxColors = d3.max(theseColors);
+    maxDiff = d3.max(theseDiffs);
 	var timeMin = new Date(firstDate);
 	var timeMax = new Date(lastDate);
 	var timeX = d3.scale.linear()
 		.domain([timeMin, timeMax])
 		.range([10, width-10]);
 
+	var mapDiff = d3.scale.linear()
+		.domain([maxDiff,0])
+		.range([10, height/3]);
+
+	var color = d3.scale.linear()
+		.domain([0,maxColors])
+		.range(["aquamarine",
+			"pink","blue","purple","blueviolet","deeppink","lightblue","red"]);
 	var basicSVG = d3.select("#viz")
 		.append("svg")
 		.attr("width",width)
 		.attr("height",height);
-	var color = d3.scale.category20c();
 
     //draw a rectangle for each key
 	var rectPhase = basicSVG.selectAll(".t")
@@ -180,28 +198,28 @@ function drawData(){
 	    .attr("x",function(d,i){
 	        return timeX(new Date(d.key)); 
 	    })
-	    .attr("y",function(d,i){
-	    	var l = d.values.length;
-	    	return height/2+l*segHeight;
-	    })
 	    .attr("width",function(d,i){
-	    	// return 10;
-	    	console.log(d.values.length+"length")
 	    	for(k=0; k<d.values.length; k++){
 		        return 2+timeX(new Date(d.values[k].end))-timeX(new Date(d.key));
 	    	}
 	    })
+	    .attr("y",function(d,i){
+	    	for(k=0; k<d.values.length; k++){
+		    	return height/2+mapDiff(d.values[k].diff);
+		    }
+	    	// var l = d.values.length;
+	    	// return height/2+l*segHeight;
+	    })
 	    .attr("height",segHeight)
 	    .attr("fill", function(d,i){
 	    	for(j=0; j<d.values.length; j++){
-	    		console.log(d.values[j].colorId+"color")
 		    	return color(parseInt(d.values[j].colorId));
 	    	}
 	    })
-	    .attr("opacity",.3)
-	    .attr("stroke","pink")	
-	    .attr("stroke-width",1)
-	    .attr("stroke-opacity",.5);
+	    .attr("opacity",.9)
+	    // .attr("stroke","pink")	
+	    // .attr("stroke-width",1)
+	    // .attr("stroke-opacity",.5);
 
 	$('rect').tipsy({ 
 	    gravity: 'nw', 
