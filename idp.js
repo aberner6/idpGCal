@@ -7,7 +7,14 @@ var width = 1200;
 var height = 600;
 var segHeight = 20;
 var theseDiffs = [];
-var maxDiff;
+
+var that;
+var levels = 0;
+
+var maxColors, maxDiff, timeMin, timeMax;
+var theseColors = [];
+var timeX = d3.scale.linear();
+var color, basicSVG, mapDiff;
 
 var firstDate = new Date("Jan 1 2016 12:00:00 GMT+0200 (CEST)");
 var lastDate = new Date("Dec 31 2016 12:00:00 GMT+0200 (CEST)");
@@ -159,36 +166,33 @@ var lastDate = new Date("Dec 31 2016 12:00:00 GMT+0200 (CEST)");
         });
       }
 
-var that;
-var levels = 0;
-var maxColors;
-var theseColors = [];
-function drawData(){
+function prepData(){
     for(i=0; i<pushHere.length; i++){
     	theseDiffs.push(pushHere[i].diff);
     	theseColors.push(pushHere[i].colorId);
     }
     maxColors = d3.max(theseColors);
     maxDiff = d3.max(theseDiffs);
-	var timeMin = new Date(firstDate);
-	var timeMax = new Date(lastDate);
-	var timeX = d3.scale.linear()
+	timeMin = new Date(firstDate);
+	timeMax = new Date(lastDate);
+	timeX = d3.scale.linear()
 		.domain([timeMin, timeMax])
 		.range([10, width-10]);
 
-	var mapDiff = d3.scale.linear()
+	mapDiff = d3.scale.linear()
 		.domain([maxDiff,0])
 		.range([10, height/3]);
 
-	var color = d3.scale.linear()
+	color = d3.scale.linear()
 		.domain([0,maxColors])
 		.range(["aquamarine",
 			"pink","blue","purple","blueviolet","deeppink","lightblue","red"]);
-	var basicSVG = d3.select("#viz")
+	basicSVG = d3.select("#viz")
 		.append("svg")
 		.attr("width",width)
 		.attr("height",height);
-
+}
+function drawData(){
     //draw a rectangle for each key
 	var rectPhase = basicSVG.selectAll(".t")
 	    .data(nestThis)
@@ -229,19 +233,8 @@ function drawData(){
 			}
 	    }
 	  });
-	// var arc = d3.svg.arc()
-	//     .innerRadius(50)
-	//     .outerRadius(70)
-	//     .startAngle(0)
-	//     .endAngle(2 * Math.PI);
-
-	// svg.append("path")
-	//     .attr("class", "arc")
-	//     .attr("d", arc);
-
-	var angle = d3.scale.linear()
-		.domain([timeMin, timeMax])
-		.range([0, 2*Math.PI]);
+}
+function makePieChart(){
 	var mapPie = d3.scale.linear()
 		.domain([0, maxDiff])
 		.range([1,10]);
@@ -278,4 +271,15 @@ function drawData(){
 		    	}
 		    })
 			.attr("d", arc);
+	$('path').tipsy({ 
+	    gravity: 'nw', 
+	    html: true, 
+	    title: function() {
+	      var d = this.__data__;
+	      console.log(d)
+	    	for(j=0; j<d.values.length; j++){
+		      return d.values[j].what;
+			}
+	    }
+	  });
 }
