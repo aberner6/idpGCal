@@ -115,7 +115,7 @@ var lastDate = new Date("Dec 31 2016 12:00:00 GMT+0200 (CEST)");
 							"start": format(when),//new Date(event.start.dateTime),
 							"end": format(whenEnd),//new Date(event.end.dateTime),
 							"colorId": event.colorId,
-							"diff": new Date(format(whenEnd)) - new Date(format(when))							
+							"diff": parseInt(new Date(format(whenEnd)) - new Date(format(when)))						
 						})
 				}
 	            if (!when) {
@@ -128,7 +128,7 @@ var lastDate = new Date("Dec 31 2016 12:00:00 GMT+0200 (CEST)");
 							"start": format(when),//new Date(event.start.date),
 							"end": format(whenEnd),//new Date(event.end.date),
 							"colorId": event.colorId,
-							"diff": new Date(format(whenEnd)) - new Date(format(when))							
+							"diff": parseInt(new Date(format(whenEnd)) - new Date(format(when)))						
 						})
 	            }
 
@@ -217,9 +217,6 @@ function drawData(){
 	    	}
 	    })
 	    .attr("opacity",.9)
-	    // .attr("stroke","pink")	
-	    // .attr("stroke-width",1)
-	    // .attr("stroke-opacity",.5);
 
 	$('rect').tipsy({ 
 	    gravity: 'nw', 
@@ -232,77 +229,53 @@ function drawData(){
 			}
 	    }
 	  });
+	// var arc = d3.svg.arc()
+	//     .innerRadius(50)
+	//     .outerRadius(70)
+	//     .startAngle(0)
+	//     .endAngle(2 * Math.PI);
+
+	// svg.append("path")
+	//     .attr("class", "arc")
+	//     .attr("d", arc);
+
+	var angle = d3.scale.linear()
+		.domain([timeMin, timeMax])
+		.range([0, 2*Math.PI]);
+	var mapPie = d3.scale.linear()
+		.domain([0, maxDiff])
+		.range([1,10]);
+	var map1Pie = d3.scale.linear()
+		.domain([timeMin, timeMax])
+		.range([1,10]);
+
+	var arc = d3.svg.arc()
+			.innerRadius(40)
+			.outerRadius(100)
+		    .startAngle(function(d, i){
+				console.log(map1Pie(new Date(d.key))+"map1pie")
+		    	return map1Pie(new Date(d.key));
+		    })
+		    .endAngle(function(d, i){
+		    	for(k=0; k<d.values.length; k++){
+		    		console.log(mapPie(d.values[k].diff)+"mapDiff")
+			    	return parseInt(map1Pie(new Date(d.key)))+parseInt(mapPie(d.values[k].diff));
+		    	}
+		    });
+
+	var chart = d3.select("body").append("svg:svg")
+			.attr("class", "chart")
+			.attr("width", 420)
+			.attr("height", 420).append("svg:g")
+			.attr("transform", "translate(200,200)");
+
+	chart.selectAll("path")
+			.data(nestThis)
+			.enter().append("svg:path")
+			.style("fill", function(d,i){
+		    	for(j=0; j<d.values.length; j++){
+			    	return color(parseInt(d.values[j].colorId));
+		    	}
+		    })
+			.attr("d", arc);
 }
-
-
-// var levels = 0;
-// function drawData(){
-
-// 	var width = 1200;
-// 	var height = 600;
-// 	var segHeight = 20;
-// 	var basicSVG = d3.select("#viz")
-// 		.append("svg")
-// 		.attr("width",width)
-// 		.attr("height",height);
-// 	var timeMin = new Date(firstDate);
-// 	var timeMax = new Date(lastDate);
-// 	var timeX = d3.scale.linear()
-// 		.domain([timeMin, timeMax])
-// 		.range([10, width-10]);
-
-// 	var color = d3.scale.category20c();
-
-//     //draw a rectangle for each key
-// 	var rectPhase = basicSVG.selectAll(".t")
-// 	    .data(incomingData)
-// 	    .enter()
-// 	    .append("rect")
-// 	    .attr("class","t")
-// 	    .attr("x",function(d,i){
-// 	        return timeX(d.start); 
-// 	    })
-// 	    .attr("y",function(d,i){
-// 	    	// if(i<pushHere.length-3){
-// 		    // 	levels = 0;
-// 		    // 	if(pushHere[i+1].start.getDate()==d.start.getDate()){
-// 	    	// 		console.log(pushHere[i+1].what+pushHere[i+1].start.getDate()+"__same__"+d.what+d.start.getDate())
-// 		    // 		levels++;
-// 		    // 		return height/2+segHeight*levels;
-// 		    // 	}
-// 		    // 	else{
-// 		    // 		return height/2;
-// 		    // 	}
-// 		    // }
-// 	    	// else {
-// 	    	// 	return height/2;
-// 	    	// }
-// 	    	console.log(d);
-// 	    	return height/2;
-// 	    })
-// 	    .attr("width",function(d,i){
-// 	        return 20+timeX(d.end)-timeX(d.start);
-// 	    })
-// 	    .attr("height",segHeight)
-// 	    .attr("fill", function(d,i){
-// 	    	// if(d.start.getDate()==d.end.getDate()){
-// 	    	// 	return "yellow";
-// 	    	// } 
-// 	    	// else{
-// 	    		return color(parseInt(d.colorId));
-// 	    	// }
-// 	    })
-// 	    .attr("opacity",.3)
-// 	    .attr("stroke","pink")	
-// 	    .attr("stroke-width",1)
-// 	    .attr("stroke-opacity",.5);
-// 	$('rect').tipsy({ 
-// 	    gravity: 'nw', 
-// 	    html: true, 
-// 	    title: function() {
-// 	      var d = this.__data__;
-// 	      return d.what;
-// 	    }
-// 	  });
-// }
-
