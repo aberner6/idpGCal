@@ -14,7 +14,7 @@ var levels = 0;
 var maxColors, maxDiff, timeMin, timeMax;
 var theseColors = [];
 var timeX = d3.scale.linear();
-var color = d3.scale.linear();
+var color = d3.scale.ordinal();//linear();
 var basicSVG, mapDiff;
 var opacity = .6;
 var firstDate = new Date("Jan 1 2016 12:00:00 GMT+0200 (CEST)");
@@ -182,10 +182,9 @@ function prepData(){
 		.domain([maxDiff,0])
 		.range([10, height/3]);
 
-	color = d3.scale.linear()
+	color //= d3.scale.linear()
 		.domain([0,maxColors])
-		.range(["aquamarine",
-			"pink","blue","purple","blueviolet","deeppink","lightblue","red"]);
+		.range(["aquamarine","pink","blue","purple","blueviolet","deeppink","lightblue","red"]);
 	basicSVG = d3.select("#viz")
 		.append("svg")
 		.attr("width",width)
@@ -211,13 +210,11 @@ function drawData(){
 	    	for(k=0; k<d.values.length; k++){
 		    	return height/2+mapDiff(d.values[k].diff);
 		    }
-	    	// var l = d.values.length;
-	    	// return height/2+l*segHeight;
 	    })
 	    .attr("height",segHeight)
 	    .attr("fill", function(d,i){
 	    	for(j=0; j<d.values.length; j++){
-		    	return color(parseInt(d.values[j].colorId));
+		    	// return color(parseInt(d.values[j].colorId));
 	    	}
 	    })
 	    .attr("opacity", opacity)
@@ -253,8 +250,7 @@ function makePieChart(){
 
 	var map1Pie = d3.scale.linear()
 		.domain([timeMin, timeMax])
-		// .range([1, 40]); //16:13
-		.range([0, 6.5]); //12
+		.range([0, 6.5]); //12 //// .range([1, 40]); //16:13
 
 			// .innerRadius(function(d,i){
 		 //    	for(k=0; k<d.values.length; k++){
@@ -267,11 +263,11 @@ function makePieChart(){
 			// 	}
 			// })
 
-
 //with data
 		var arc = d3.svg.arc()
 			.innerRadius(function(d,i){
 		    	for(k=0; k<d.values.length; k++){
+		    		console.log(d.values[k].what+d.values[k].colorId)
 					return mapInnerPie(parseInt(d.values[k].diff));
 				}
 			})
@@ -297,7 +293,7 @@ function makePieChart(){
 			.attr("transform", "translate("+width/2+","+height/2+")")
 			.style("fill", function(d,i){ 
 		    	for(j=0; j<d.values.length; j++){
-			    	return color(parseInt(d.values[j].colorId));
+			    	return color(d.values[j].colorId);
 		    	}
 		    })
 		    .style("stroke",function(d,i){ 
