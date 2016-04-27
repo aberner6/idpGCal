@@ -3,8 +3,8 @@ var timeData = [];
 var nestThis;
 var oneWhen;
 var format = d3.time.format("%x");
-var width = 1200;
-var height = 600;
+var width = window.innerWidth;
+var height = window.outerHeight;
 var segHeight = 20;
 var theseDiffs = [];
 
@@ -14,12 +14,11 @@ var levels = 0;
 var maxColors, maxDiff, timeMin, timeMax;
 var theseColors = [];
 var timeX = d3.scale.linear();
-var color, basicSVG, mapDiff;
-
+var color = d3.scale.linear();
+var basicSVG, mapDiff;
+var opacity = .6;
 var firstDate = new Date("Jan 1 2016 12:00:00 GMT+0200 (CEST)");
 var lastDate = new Date("Dec 31 2016 12:00:00 GMT+0200 (CEST)");
-// var firstDate = format(startDate);
-// var lastdate = format(endDate);
 // client id
 // 587005751584-pkhavkfl3bvs0iii1fin7pcvkbmqs1gr.apps.googleusercontent.com
 //client secret
@@ -190,7 +189,8 @@ function prepData(){
 	basicSVG = d3.select("#viz")
 		.append("svg")
 		.attr("width",width)
-		.attr("height",height);
+		.attr("height",height)
+		.attr("transform", "translate(0,50)");
 }
 function drawData(){
     //draw a rectangle for each key
@@ -220,7 +220,7 @@ function drawData(){
 		    	return color(parseInt(d.values[j].colorId));
 	    	}
 	    })
-	    .attr("opacity",.9)
+	    .attr("opacity", opacity)
 
 	$('rect').tipsy({ 
 	    gravity: 'nw', 
@@ -235,49 +235,86 @@ function drawData(){
 	  });
 }
 function makePieChart(){
-	var mapPie = d3.scale.linear()
+
+
+	var mapInnerPie = d3.scale.linear()
 		.domain([0, maxDiff])
-		.range([1,10]);
+		.range([100,height/2]);
+	var mapOuterPie = d3.scale.linear()
+		.domain([0, maxDiff])
+		.range([140,height/2]);
+	// var mapInnerPie = d3.scale.linear()
+	// 	.domain([0,parseInt(maxColors)])
+	// 	.range([40,height/3]);
+	// var mapOuterPie = d3.scale.linear()
+	// 	.domain([0,parseInt(maxColors)])
+	// 	.range([100,height/3]);
+
+
 	var map1Pie = d3.scale.linear()
 		.domain([timeMin, timeMax])
-		.range([1,10]);
+		// .range([1, 40]); //16:13
+		.range([0, 6.5]); //12
 
-	var arc = d3.svg.arc()
-			.innerRadius(40)
-			.outerRadius(100)
-		    .startAngle(function(d, i){
-				console.log(map1Pie(new Date(d.key))+"map1pie")
-		    	return map1Pie(new Date(d.key));
+			// .innerRadius(function(d,i){
+		 //    	for(k=0; k<d.values.length; k++){
+			// 		return mapInnerPie(parseInt(d.values[k].colorId));
+			// 	}
+			// })
+			// .outerRadius(function(d,i){
+		 //    	for(k=0; k<d.values.length; k++){
+			// 		return mapOuterPie(parseInt(d.values[k].colorId));
+			// 	}
+			// })
+
+
+//with data
+		var arc = d3.svg.arc()
+			.innerRadius(function(d,i){
+		    	for(k=0; k<d.values.length; k++){
+					return mapInnerPie(parseInt(d.values[k].diff));
+				}
+			})
+			.outerRadius(function(d,i){
+		    	for(k=0; k<d.values.length; k++){
+					return mapOuterPie(parseInt(d.values[k].diff));
+				}
+			})
+			.startAngle(function(d, i){
+		    	for(k=0; k<d.values.length; k++){
+			    	return map1Pie(new Date(d.values[k].start));
+		    	}
 		    })
 		    .endAngle(function(d, i){
 		    	for(k=0; k<d.values.length; k++){
-		    		console.log(mapPie(d.values[k].diff)+"mapDiff")
-			    	return parseInt(map1Pie(new Date(d.key)))+parseInt(mapPie(d.values[k].diff));
+			    	return map1Pie(new Date(d.values[k].end));
 		    	}
 		    });
 
-	var chart = d3.select("body").append("svg:svg")
-			.attr("class", "chart")
-			.attr("width", 420)
-			.attr("height", 420).append("svg:g")
-			.attr("transform", "translate(200,200)");
-
-	chart.selectAll("path")
+	basicSVG.selectAll("path")
 			.data(nestThis)
 			.enter().append("svg:path")
-			.style("fill", function(d,i){
+			.attr("transform", "translate("+width/2+","+height/2+")")
+			.style("fill", function(d,i){ 
 		    	for(j=0; j<d.values.length; j++){
 			    	return color(parseInt(d.values[j].colorId));
 		    	}
 		    })
+		    .style("stroke",function(d,i){ 
+		    	for(j=0; j<d.values.length; j++){
+			    	return "white";
+		    	}
+		    })
+		    .attr("opacity",opacity)
 			.attr("d", arc);
 	$('path').tipsy({ 
-	    gravity: 'nw', 
+	    gravity: 'ne', 
 	    html: true, 
 	    title: function() {
 	      var d = this.__data__;
 	      console.log(d)
 	    	for(j=0; j<d.values.length; j++){
+		      console.log(d.values[j])
 		      return d.values[j].what;
 			}
 	    }
