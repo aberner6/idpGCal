@@ -182,7 +182,7 @@ function prepData(){
 		.domain([maxDiff,0])
 		.range([10, height/3]);
 
-	color //= d3.scale.linear()
+	color
 		.domain([0,maxColors])
 		.range(["aquamarine","pink","blue","purple","blueviolet","deeppink","lightblue","red"]);
 	basicSVG = d3.select("#viz")
@@ -191,48 +191,57 @@ function prepData(){
 		.attr("height",height)
 		.attr("transform", "translate(0,50)");
 }
+var rects;
 function drawData(){
-    //draw a rectangle for each key
-	var rectPhase = basicSVG.selectAll(".t")
-	    .data(nestThis)
-	    .enter()
-	    .append("rect")
-	    .attr("class","t")
+	rects = basicSVG.selectAll("rectIng")
+		.data(nestThis)
+		.enter().append("g")
+		.selectAll("g.rectIng")
+		.data(function(d, i) { return d.values; })
+		.enter().append("rect")
+		.style("fill", function(d,i){ 
+	    	return color(d.colorId);
+	    })
+	    .style("stroke", "white")
+	    .attr("opacity",opacity)
 	    .attr("x",function(d,i){
-	        return timeX(new Date(d.key)); 
+	        return timeX(new Date(d.start)); 
 	    })
 	    .attr("width",function(d,i){
-	    	for(k=0; k<d.values.length; k++){
-		        return 2+timeX(new Date(d.values[k].end))-timeX(new Date(d.key));
-	    	}
+	        return 1+timeX(new Date(d.end))-timeX(new Date(d.start));
 	    })
 	    .attr("y",function(d,i){
-	    	for(k=0; k<d.values.length; k++){
-		    	return height/2+mapDiff(d.values[k].diff);
-		    }
+	    	return height/2+mapDiff(d.diff);
 	    })
 	    .attr("height",segHeight)
-	    .attr("fill", function(d,i){
-	    	for(j=0; j<d.values.length; j++){
-		    	// return color(parseInt(d.values[j].colorId));
-	    	}
-	    })
-	    .attr("opacity", opacity)
+	    .attr("transform", "rotate(0)");
+	d3.selectAll("rect")
+		.transition()
+		.delay(2000)
+		.duration(2000)
+		.attr("transform", function(d,i){
+			return "rotate("+ i*-10 + ")"
+		})
+		.transition()
+		.delay(3500)
+		.duration(2000)
+		.attr("transform", "rotate(0)")
+		.attr("x",width/2)
+		.attr("y",height/2)
+		.attr("width",1)
+		.attr("height",1);
+
 
 	$('rect').tipsy({ 
-	    gravity: 'nw', 
+	    gravity: 'ne', 
 	    html: true, 
 	    title: function() {
 	      var d = this.__data__;
-	      console.log(d)
-	    	for(j=0; j<d.values.length; j++){
-		      return d.values[j].what;
-			}
+	      return d.what;
 	    }
 	  });
 }
 function makePieChart(){
-
 
 	var mapInnerPie = d3.scale.linear()
 		.domain([0, maxDiff])
@@ -240,79 +249,87 @@ function makePieChart(){
 	var mapOuterPie = d3.scale.linear()
 		.domain([0, maxDiff])
 		.range([140,height/2]);
-	// var mapInnerPie = d3.scale.linear()
-	// 	.domain([0,parseInt(maxColors)])
-	// 	.range([40,height/3]);
-	// var mapOuterPie = d3.scale.linear()
-	// 	.domain([0,parseInt(maxColors)])
-	// 	.range([100,height/3]);
-
 
 	var map1Pie = d3.scale.linear()
 		.domain([timeMin, timeMax])
-		.range([0, 6.5]); //12 //// .range([1, 40]); //16:13
+		.range([0, 6.5]); 
+//OR
+	var arc = d3.svg.arc()
+		.innerRadius(function(d){
+			console.log(d.what+d.diff+"start"+d.start+"end"+d.end);
+    		return mapInnerPie(parseInt(d.diff));
+		})
+		.outerRadius(function(d){
+			return mapOuterPie(parseInt(d.diff));
+		})
+		.startAngle(function(d){
+	    	return map1Pie(new Date(d.start));
+	    })
+	    .endAngle(function(d,i){
+	    	return .05+map1Pie(new Date(d.end));
+	    });
 
-			// .innerRadius(function(d,i){
-		 //    	for(k=0; k<d.values.length; k++){
-			// 		return mapInnerPie(parseInt(d.values[k].colorId));
-			// 	}
-			// })
-			// .outerRadius(function(d,i){
-		 //    	for(k=0; k<d.values.length; k++){
-			// 		return mapOuterPie(parseInt(d.values[k].colorId));
-			// 	}
-			// })
+	var arc0 = d3.svg.arc()
+		.innerRadius(0)
+		.outerRadius(1)
+		.startAngle(0)
+	    .endAngle(.05)
 
-//with data
-		var arc = d3.svg.arc()
-			.innerRadius(function(d,i){
-		    	for(k=0; k<d.values.length; k++){
-		    		console.log(d.values[k].what+d.values[k].colorId)
-					return mapInnerPie(parseInt(d.values[k].diff));
-				}
-			})
-			.outerRadius(function(d,i){
-		    	for(k=0; k<d.values.length; k++){
-					return mapOuterPie(parseInt(d.values[k].diff));
-				}
-			})
-			.startAngle(function(d, i){
-		    	for(k=0; k<d.values.length; k++){
-			    	return map1Pie(new Date(d.values[k].start));
-		    	}
-		    })
-		    .endAngle(function(d, i){
-		    	for(k=0; k<d.values.length; k++){
-			    	return map1Pie(new Date(d.values[k].end));
-		    	}
-		    });
-
-	basicSVG.selectAll("path")
+	var paths = basicSVG.selectAll("pathIng")
 			.data(nestThis)
-			.enter().append("svg:path")
+			.enter().append("g")
 			.attr("transform", "translate("+width/2+","+height/2+")")
+    		.selectAll("g.pathIng")
+    		.data(function(d, i) { return d.values; })
+			.enter().append("path")
 			.style("fill", function(d,i){ 
-		    	for(j=0; j<d.values.length; j++){
-			    	return color(d.values[j].colorId);
-		    	}
+		    	return color(d.colorId);
 		    })
-		    .style("stroke",function(d,i){ 
-		    	for(j=0; j<d.values.length; j++){
-			    	return "white";
-		    	}
-		    })
+		    .style("stroke", "white")
 		    .attr("opacity",opacity)
-			.attr("d", arc);
+			.attr("d", arc0)
+			// .transition()
+			// .delay(1000)
+			// .duration(2000)
+			// .attr("d", arc)
+
+
 	$('path').tipsy({ 
 	    gravity: 'ne', 
 	    html: true, 
 	    title: function() {
 	      var d = this.__data__;
-	      console.log(d)
-	    	for(j=0; j<d.values.length; j++){
-		      console.log(d.values[j])
-		      return d.values[j].what;
-			}
+	      return d.what;
 	    }
 	  });
 }
+
+
+
+
+
+//with data
+	// var arc = d3.svg.arc()
+	// 	.innerRadius(function(d,i){
+	//       var length = d.values.length;
+	//     	for(var n = 0; n<length; n++){
+	//     		// console.log(length+"length");
+	//     		console.log(n+"n"+length+"length")
+	//     		return mapInnerPie(parseInt(d.values[n].diff));
+	//     	}
+	// 	})
+	// 	.outerRadius(function(d,i){
+	//     	for(k=0; k<d.values.length; k++){
+	// 			return mapOuterPie(parseInt(d.values[k].diff));
+	// 		}
+	// 	})
+	// 	.startAngle(function(d, i){
+	//     	for(k=0; k<d.values.length; k++){
+	// 	    	return map1Pie(new Date(d.values[k].start));
+	//     	}
+	//     })
+	//     .endAngle(function(d, i){
+	//     	for(k=0; k<d.values.length; k++){
+	// 	    	return .05+map1Pie(new Date(d.values[k].end));
+	//     	}
+	//     });
