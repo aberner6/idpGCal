@@ -14,6 +14,21 @@
       body{
         /*background-color:lightgray;*/
       }
+      rect.background {
+        fill: none;
+        stroke:gray;
+      }
+      .brush .extent {
+        stroke: black;
+        stroke-width: .2px;
+        fill: lightgray;
+        opacity:.5;
+        display: block;
+        pointer-events:all;
+      }
+      g.x.brush{
+        pointer-events: all;
+      }
       #reset{
         position: fixed;
         display: none;
@@ -47,7 +62,7 @@
       }
     </style>
   <body>
-  <div id = "viz"></div>
+  <!-- <div id = "viz"></div> -->
   <div id="reset">RESET</div>
     <div id="authorize-div" style="display: none">
       <span>Authorize access to Google Calendar API</span>
