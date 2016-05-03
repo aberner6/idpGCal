@@ -35,13 +35,16 @@ var SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"];
 var mini, chart, svg, basicSVG;
 	timeMin = new Date(firstDate);
 	timeMax = new Date(lastDate);
+var e = [timeMin, timeMax]; //set brush range
 var m = [20, 15, 15, 10], //top right bottom left
     w = width - m[1] * 2 - m[3],
     h = height, 
     miniHeight = 20, 
     mainHeight = height - miniHeight;
+var brush = d3.svg.brush()
 // var timevar = 60000;
 var timevar = 0;
+var brushCall;
 
 
 	// .attr("transform", "translate(0,50)");
@@ -152,6 +155,22 @@ var timevar = 0;
             nestThis = d3.nest()
 				.key(function(d) { return d.start; })
 				.entries(pushHere);
+
+
+			// if(nestThis.length>0){
+			// 	for(i=0; i<nestThis.length; i++){
+			// 		drawData(nestThis[i].values)
+			// 	}
+			// }
+              // if(event.attendees!=undefined){
+	             //  for(j=0; j<event.attendees.length; j++){
+	             //  	// console.log(i+event.attendees[j].displayName);
+	             //  }
+              // }
+          // var when = event.start.dateTime;
+          // if (!when) {
+          //   when = event.start.date;
+          // }
         }
       } 
       else {
@@ -225,15 +244,36 @@ function prepData(){
 	    })
 	    .attr("y", 0)
 	    .attr("height", miniHeight);
-}
 
+ //    //brush
+	// var brushCall = mini.append("g");
+	// brush.extent(e);
+	// mini.call(brush);
+	// // makePieChart();
+ //    brush
+ //        .x(timeX)
+ //        .on("brush", makePieChart);
+ //    brushCall
+ //        .attr("class", "x brush")
+ //        .call(brush)
+ //        .selectAll("rect")
+ //        .attr("y", 0)
+ //        .style("visibility", "visible")
+ //        .attr("height", miniHeight);
+}
+var thesepaths;
+var blah;
+var patht;
 function makePieChart(){
-    minExtent = timeMin;
-    maxExtent = timeMax; 
+    minExtent = brush.extent()[0],
+    maxExtent = brush.extent()[1];
 
 	var visItems = nestThis.filter(function(d) {
         return new Date(d.key) < maxExtent && new Date(d.key) > minExtent;
     });
+    // console.log(minExtent);
+    // console.log(maxExtent);
+    // console.log(visItems)
 
 	var mapInnerPie = d3.scale.linear()
 		.domain([0, maxDiff])
@@ -246,6 +286,7 @@ function makePieChart(){
 		.domain([timeMin, timeMax])
 		.range([0, 6.5]); 
 
+//OR
 	var arc = d3.svg.arc()
 		.startAngle(function(d){
 	    	return map1Pie(new Date(d.start));
@@ -260,46 +301,98 @@ function makePieChart(){
 			return mapOuterPie(parseInt(d.diff));
 		});
 
-	var arc0 = d3.svg.arc()
-		.innerRadius(0)
-		.outerRadius(1)
-		.startAngle(0)
-	    .endAngle(.05)
+	// var arc0 = d3.svg.arc()
+	// 	.innerRadius(0)
+	// 	.outerRadius(1)
+	// 	.startAngle(0)
+	//     .endAngle(.05)
 
-	var paths = basicSVG.selectAll("pathIng")
+	var blah = basicSVG.selectAll(".gr")
 		.data(visItems)
 		.enter().append("g")
 		.attr("transform", "translate("+width/2+","+height/2+")")
-		.selectAll(".pathIng")
-		.data(function(d, i) { return d.values; })
-		.enter().append("path")
+		.attr("class","gr");
+
+	patht = blah.selectAll(".pathIt")
+		.data(function(d){ return d.values; })
+		// .attr("class","pathIt")
+		// .attr("transform", "translate("+width/2+","+height/2+")")
+
+	patht.enter().append("path")
+		.attr("class","pathIt")
+		// .attr("transform", "translate("+width/2+","+height/2+")")
+		.attr("d", arc)
+	    .style("stroke", "white")
+	    .attr("opacity", opacity/2)
 		.style("fill", function(d,i){ 
 	    	return color(d.colorId);
-	    })
-	    .style("stroke", "white")
-	    .attr("opacity",opacity/2)
-		.attr("d", arc0)
-		.transition()
-		.duration(2000)
-		.attr("d",arc)
+	    })		
+	patht.exit().remove();
 
-	$('path').tipsy({ 
-	    gravity: 'ne', 
-	    html: true, 
-	    title: function() {
-	      var d = this.__data__;
-	      return d.what;
-	    }
-	  });
-}
-var initialZoom = 1,
-	maxZoom = 10;
-	p0 = [width/2, height/2, height];
-    p1 = [width/2+conn_levels[2], height/2, 100],
-    p2 = [width/2+conn_levels[3], height/2, 100];
-var zoomInOut, resetZoom, transi, transf;
-function zooming(){
-	// function zooming(){
+
+	// patht = blah.selectAll(".pathIt")
+	// 	.data(function(d){ return d.values; })
+	// 	.attr("class","pathIt")
+
+	// patht.transition().duration(1500)
+	// 	.attr("transform", "translate("+width/2+","+height/2+")")
+	//     .attr("d", arc)
+	//     .style("stroke", "white")
+	//     // .attr("opacity", opacity/2)
+	// 	.style("fill", function(d,i){ 
+	//     	return color(d.colorId);
+	//     })
+	// patht.enter()
+	// 	.append("path")
+	// 	.attr("class","pathIt")
+	// 	.attr("transform", "translate("+width/2+","+height/2+")")
+	// 	.attr("d", arc)
+	//     .style("stroke", "white")
+	//     .attr("opacity", opacity/2)
+	// 	.style("fill", function(d,i){ 
+	//     	return color(d.colorId);
+	//     })
+	// patht.exit().remove();
+	    
+
+
+	// var paths;
+	// paths = basicSVG.selectAll("pathIng")
+	// 	.data(visItems)
+	// 	.enter().append("g")
+	// 	.attr("transform", "translate("+width/2+","+height/2+")")
+	
+	// thesepaths = paths.selectAll(".paths")
+	// 	.data(function(d, i) { return d.values; })
+	// 	.style("fill", function(d,i){ 
+	//     	return color(d.colorId);
+	//     })
+ //    thesepaths		
+	// 	.enter().append("path")
+	// 	.attr("class","paths")
+	//     .style("stroke", "white")
+	//     .attr("opacity",opacity)
+	// 	.style("fill", function(d,i){ 
+	//     	return color(d.colorId);
+	//     })
+		// .attr("d",arc0)
+		// .transition()
+		// .duration(1000)
+		// .attr("d", arc); //arc0
+		// .transition()
+		// .delay(1000)
+		// .duration(2000)
+		// .attr("d", arc)
+	// thesepaths.exit().remove();
+
+	function zooming(){
+		var initialZoom = 1,
+			maxZoom = 10;
+			p0 = [width/2, height/2, height];
+		    p1 = [width/2+conn_levels[2], height/2, 100],
+		    p2 = [width/2+conn_levels[3], height/2, 100];
+
+
 		chart //don't let people zoom in all of these ways - will interrupt other functions of the program
 			.on("mousedown.zoom", null)
 		    .on("touchstart.zoom", null)
@@ -315,22 +408,22 @@ function zooming(){
 				zoomInOut(t, s);
 			})
 		   );
-	// }
-	$('#reset').slideDown("slow");
-	zoomInOut = function(t, s) {
+	}
+
+	var zoomInOut = function(t, s) {
 	// 	//showReset so people can reset when things get hard to control on zooms
-		// if (showReset==true){
-		// 	$('#reset').slideDown("slow");
-		// }
-		// if (showReset==false){
-		// 	$('#reset').slideUp("slow");
-		// }
-		// if (s>=initialZoom){
-		// 	showReset = true;
-		// }
-		// if (s<initialZoom){
-		// 	showReset = false;
-		// }
+		if (showReset==true){
+			$('#reset').slideDown("slow");
+		}
+		if (showReset==false){
+			$('#reset').slideUp("slow");
+		}
+		if (s>=initialZoom){
+			showReset = true;
+		}
+		if (s<initialZoom){
+			showReset = false;
+		}
 
 	  basicSVG.attr("transform",
 	      "translate("+d3.event.translate+ ")"
@@ -338,18 +431,17 @@ function zooming(){
 	};
 
 	d3.select("#reset").on("click", resetZoom);
+	
 	function resetZoom(){
 		console.log("reset viz")
 	   	basicSVG.attr("transform",
 	      "translate("+ 0 + "," + 0 + ")"
 	      + " scale(" + initialZoom + ")");
-		// showReset = false;
-		// $('#reset').slideUp("slow");
-		// basicSVG.call(transi, p1, p0);
-
+		showReset = false;
+		$('#reset').slideUp("slow");
 	};
 
-	transi = function(chart, start, end) {
+	function transi(chart, start, end) {
 		var  i = d3.interpolateZoom(start, end);
 		basicSVG
 		  	.attr("transform", transf(start))
@@ -361,24 +453,34 @@ function zooming(){
 		  			return transf(i(t)); 
 		  		}; 
 		  	})
+      	// basicSVG.call(transi,p1,p2);
     }
-  	transf = function(p) {
+  	function transf(p) {
     	var k = height / p[2]; 
     	return "translate(" + (center[0] - p[0] * k) + "," + (center[1] - p[1] * k) + ")scale(" + k + ")";
   	}
   	//something like on month clicked?
+// svg.call(transi, p0, p1);
+// svg.call(transi, p1, p0);
 	// function zoomOpening(){
-		// if (animateZoom){
-			// d3.select("#viz").style("pointer-events","none");
-			chart.call(transi, p0, p1); //SKIP AHEAD
-			// animateZoom = false;
-		// }
-		// if (animateZoom==false){
-			// resetZoom();
-		// }
-	// }	
-}
+	// 	if (animateZoom){
+	// 		d3.select("#viz").style("pointer-events","none");
+	// 		svg.call(transi, p0, p1); //SKIP AHEAD
+	// 	}
+	// 	if (animateZoom==false){
+	// 		resetZoom();
+	// 	}
+	// }
 
+	$('path').tipsy({ 
+	    gravity: 'ne', 
+	    html: true, 
+	    title: function() {
+	      var d = this.__data__;
+	      return d.what;
+	    }
+	  });
+}
 var rects;
 function drawData(){
 	rects = basicSVG.selectAll("rectIng")
